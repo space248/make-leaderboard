@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>올림픽 기록 시스템</title>
+    <style>
+        body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 20px; background-color: #f0f2f5; }
+        h2 { color: #1a1a1a; margin-bottom: 5px; }
+        p { color: #666; margin-top: 0; }
+
+        .player-card { 
+            background: white;
+            border: 1px solid #ddd; 
+            padding: 20px; 
+            margin-bottom: 12px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px; /* 간격 넓힘 */
+            flex-wrap: wrap; /* 화면 좁으면 줄바꿈 허용 */
+        }
+
+        .country-label { 
+            font-weight: bold; 
+            font-size: 1.1em;
+            color: #333;
+            width: 80px; 
+        }
+
+        /* 이름 입력칸 */
+        input[type="text"] { 
+            padding: 8px; 
+            width: 140px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            font-size: 15px;
+        }
+
+        /* 점수 입력칸 (십만 단위 위해 넓게 수정) */
+        input[type="number"] { 
+            padding: 8px; 
+            width: 110px; /* 너비 대폭 증가 */
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            text-align: right; /* 숫자는 오른쪽 정렬이 보기 좋음 */
+            font-size: 15px;
+        }
+
+        .score-label { font-size: 0.9em; color: #555; }
+
+        button { 
+            width: 100%;
+            padding: 15px; 
+            background-color: #4CAF50; /* 초록색 계열 */
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #45a049; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        th, td { border-bottom: 1px solid #eee; padding: 15px; text-align: center; font-size: 16px; }
+        th { background-color: #333; color: white; }
+        tr:nth-child(1) td { background-color: #fffde7; color: #d32f2f; font-weight: bold; font-size: 1.1em; border-left: 5px solid #ffd700; } /* 1등 강조 */
+    </style>
+</head>
+<body>
+
+    <h2>🥇 대규모 점수 기록 시스템</h2>
+    <p>선수 이름과 점수(십만 단위)를 입력하세요.</p>
+    
+    <div id="input-area"></div>
+    <button onclick="calculateAndSort()">🏆 순위 확인하기</button>
+
+    <h3>📊 최종 순위표</h3>
+    <table id="result-table">
+        <thead>
+            <tr>
+                <th width="15%">순위</th>
+                <th width="20%">국가</th>
+                <th width="25%">이름</th>
+                <th width="40%">총점</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="4" style="color:#999;">점수 입력 후 버튼을 눌러주세요</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        // 초기 데이터
+        let players = [
+            { country: "대한민국", name: "김철수", scores: [0, 0, 0] },
+            { country: "미국", name: "제임스", scores: [0, 0, 0] },
+            { country: "프랑스", name: "루이", scores: [0, 0, 0] },
+            { country: "중국", name: "리 웨이", scores: [0, 0, 0] },
+            { country: "영국", name: "아서", scores: [0, 0, 0] }
+        ];
+
+        const inputArea = document.getElementById("input-area");
+        
+        // 화면 생성
+        players.forEach((p, index) => {
+            let html = `
+            <div class="player-card">
+                <span class="country-label">${p.country}</span>
+                <input type="text" id="name_${index}" value="${p.name}" placeholder="이름">
+                
+                <span class="score-label">1차:</span>
+                <input type="number" id="s_${index}_0" placeholder="0"> 
+                
+                <span class="score-label">2차:</span>
+                <input type="number" id="s_${index}_1" placeholder="0"> 
+                
+                <span class="score-label">3차:</span>
+                <input type="number" id="s_${index}_2" placeholder="0">
+            </div>`;
+            inputArea.innerHTML += html;
+        });
+
+        function calculateAndSort() {
+            players.forEach((p, index) => {
+                // 이름 업데이트
+                p.name = document.getElementById(`name_${index}`).value;
+
+                // 점수 가져오기
+                let s1 = Number(document.getElementById(`s_${index}_0`).value) || 0;
+                let s2 = Number(document.getElementById(`s_${index}_1`).value) || 0;
+                let s3 = Number(document.getElementById(`s_${index}_2`).value) || 0;
+                p.total = s1 + s2 + s3;
+            });
+
+            // 내림차순 정렬
+            let sortedPlayers = [...players].sort((a, b) => b.total - a.total);
+
+            // 테이블 출력
+            const tbody = document.querySelector("#result-table tbody");
+            tbody.innerHTML = ""; 
+            
+            sortedPlayers.forEach((p, index) => {
+                let rank = index + 1;
+                let medal = "";
+                if(rank === 1) medal = "🥇";
+                else if(rank === 2) medal = "🥈";
+                else if(rank === 3) medal = "🥉";
+
+                // 숫자 3자리마다 콤마 찍기 (toLocaleString)
+                let formattedScore = p.total.toLocaleString(); 
+
+                let row = `<tr>
+                    <td>${medal} ${rank}위</td>
+                    <td>${p.country}</td>
+                    <td>${p.name}</td>
+                    <td><strong>${formattedScore}점</strong></td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+    </script>
+</body>
+</html>
